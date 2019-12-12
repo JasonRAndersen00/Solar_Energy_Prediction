@@ -27,30 +27,49 @@ sns.set()
 sns.set_palette("colorblind")
 def define_model(dense_nodes):
 
+
+    #The two inputs:
+
+    #img_input is 12 images representing
+    #cloud cover over a single hour
+    #at five minute intervals
     img_input = keras.models.Sequential()
+
+    #solar_input is a single value from PySolar
+    #that is the expected solar irradiance 
+    #under clear sky conditions
     solar_input = keras.models.Sequential()
 
-    #shape=(numImages, width,height,channesl)
+    #First define the shape of each of the inputs
     img_input.add(Input(shape=(12,100,150,3)))
     solar_input.add(Input(shape=(1)))
 
-    #dialation parameter, dialation=2 or 4
-    img_input.add(TimeDistributed(Conv2D(32, kernel_size=(7,7), strides=(2,2), padding='valid', activation='relu')))
-    img_input.add(TimeDistributed(Conv2D(64, kernel_size=(3,3), strides=(2,2), padding='valid', activation='relu')))
-    img_input.add(TimeDistributed(Conv2D(128, kernel_size=(3,3), strides=(2,2), padding='valid', activation='relu')))
-    ##add more as needed
+    #Each of these are time distributed convolutional layers
+    #this means that it will take the 12 images and keep them in order
+    #and basically assign feature maps to each of the 12 images
+    img_input.add(TimeDistributed(Conv2D(32, kernel_size=(7,7),
+                                        strides=(2,2), padding='valid',
+                                        activation='relu')))
+    img_input.add(TimeDistributed(Conv2D(64, kernel_size=(3,3),
+                                        strides=(2,2), padding='valid', 
+                                        activation='relu')))
+    img_input.add(TimeDistributed(Conv2D(128, kernel_size=(3,3), 
+                                        strides=(2,2), padding='valid', 
+                                        activation='relu')))
 
 
-
+    #Flatten the feature maps to pass through the bidirectional layer
     img_input.add(TimeDistributed(Flatten()))
-    img_input.add(Bidirectional(LSTM(128, activation='relu')))#train faster run slower
-    img_input.add(Dense(dense_nodes,activation='relu'))
-    # img_input.add(Bidirectional(LSTM(128, activation='relu', dropout=0.5)))#train faster run slower
-    # img_input.add(Bidirectional(LSTM(128, activation='relu', dropout=0.5)))#train faster run slower
+    img_input.add(Bidirectional(LSTM(128, activation='relu')))
+
+    #Pass all of the feature maps through a single dense layer with
+    # a lower number of nodes so as not to drown out the 
+    #input from PySolar
+    img_input.add(Dense(16,activation='relu'))
 
 
-
-    # solar_input = Dense(16,activation='relu')(solar_input) #If uncomment this, comment out the next dense layer
+    #concatenate the output above with the solar_input
+    #and pass this through 2 dense layers
     concat = keras.layers.concatenate([img_input.output,solar_input.output])
     concat = Dense(16,activation='relu')(concat)
     concat = Dense(1)(concat)
@@ -59,7 +78,7 @@ def define_model(dense_nodes):
 
     model.summary()
 
-    model.compile(loss='mse',optimizer='adam')#,learning_rate=0.01)
+    model.compile(loss='mse',optimizer='adam')
     return model
 
 

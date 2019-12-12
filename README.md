@@ -15,3 +15,6 @@ Plots and graphs the included days. Can change to plot other days if needed.
 ## Notice
 The data file structure will need to be laid out since I could not upload the any amount of the data itself. 
 also, there is no pre-defined model because it is too big to put on GitHub.
+
+First thing to do is run getCloudData.py to get the necessary data, Note that when doing this the correct file paths will need to be in place
+After that you should just be able to run training.py followed by Validation.py to see the results of your training. 
